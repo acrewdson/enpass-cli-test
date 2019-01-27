@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	_ "github.com/mutecomm/go-sqlcipher"
 	"log"
 	"path/filepath"
+
+	_ "github.com/mutecomm/go-sqlcipher"
 )
 
 const (
@@ -32,7 +33,7 @@ type Vault struct {
 }
 
 func (v *Vault) openEncryptedDatabase(path string, hexKey string) (*sql.DB, error) {
-	dbname := fmt.Sprintf("db?file=%s&_pragma_key=x'%s'", path, hexKey)
+	dbname := fmt.Sprintf("%s?_pragma_key=x'%s'", path, hexKey)
 
 	db, err := sql.Open("sqlite3", dbname)
 	if err != nil {
@@ -44,7 +45,7 @@ func (v *Vault) openEncryptedDatabase(path string, hexKey string) (*sql.DB, erro
 
 func OpenVault(databasePath string, keyfilePath string, masterPassword []byte) (*Vault, error) {
 	vault := Vault{
-		databaseFilename: databasePath,
+		databaseFilename:  databasePath,
 		vaultInfoFilename: filepath.Dir(databasePath) + "/" + vaultInfoFileName,
 	}
 
@@ -57,26 +58,25 @@ func OpenVault(databasePath string, keyfilePath string, masterPassword []byte) (
 
 	if keyfilePath == "" && vaultInfo.HasKeyfile == 1 {
 		return nil, errors.New("you should specify a keyfile")
-	} else
-	if keyfilePath != "" && vaultInfo.HasKeyfile  == 0 {
+	} else if keyfilePath != "" && vaultInfo.HasKeyfile == 0 {
 		return nil, errors.New("you are not currently using a keyfile")
 	}
 
 	/*
-	var keyfileBytes []byte
-	if keyfilePath != "" {
-		keyfile, err := loadKeyFile(keyfilePath)
-		if err != nil {
-			return nil, err
-		}
+		var keyfileBytes []byte
+		if keyfilePath != "" {
+			keyfile, err := loadKeyFile(keyfilePath)
+			if err != nil {
+				return nil, err
+			}
 
-		keyfileBytes, err = hex.DecodeString(keyfile.Key)
-		if err != nil {
-			return nil, errors.New("could not decode keyfile")
-		}
+			keyfileBytes, err = hex.DecodeString(keyfile.Key)
+			if err != nil {
+				return nil, errors.New("could not decode keyfile")
+			}
 
-		log.Printf("%d", len(keyfileBytes))
-	}*/
+			log.Printf("%d", len(keyfileBytes))
+		}*/
 
 	salt, err := vault.extractSalt(databasePath)
 	if err != nil {
@@ -104,15 +104,12 @@ func (v *Vault) Close() {
 
 func (v *Vault) GetTables() {
 	rows, err := v.db.Query("SELECT * FROM Identity;")
-	if err != nil { log.Fatal(err) }
+	if err != nil {
+		fmt.Println("query error")
+		log.Fatal(err)
+	}
 
 	for rows.Next() {
-		log.Println("line")
-		var interf1 interface{}
-		if err := rows.Scan(&interf1); err != nil {
-			log.Fatalf("%v", err)
-		}
-
-		log.Printf("%s\n", interf1)
+		log.Println("found row")
 	}
 }

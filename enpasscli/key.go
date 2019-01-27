@@ -5,8 +5,9 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"errors"
-	"golang.org/x/crypto/pbkdf2"
 	"os"
+
+	"golang.org/x/crypto/pbkdf2"
 )
 
 const (
@@ -48,7 +49,6 @@ func (v *Vault) deriveKey(masterPassword []byte, salt []byte) (resultKey string,
 
 	// PBKDF2- HMAC-SHA256
 	key := pbkdf2.Key(masterPassword, salt, v.vaultInfo.KDFIterations, sha512.Size, sha512.New)
-
 	hexKey := make([]byte, hex.EncodedLen(sha512.Size))
 	hex.Encode(hexKey, key)
 
